@@ -15,9 +15,12 @@ def get_mnist():
     Y = Y[p]
     return X, Y
 
+#X, Y  = get_mnist()
 
-X, Y  = get_mnist()
+X = np.load('/home-nfs/shimada/work/english_mfcc.npz')
+X = X['arr_0']
+Y = None
 
-c = DeepEmbeddingClustering(n_clusters=10, input_dim=784)
+c = DeepEmbeddingClustering(n_clusters=100, input_dim=39)
 c.initialize(X, finetune_iters=100000, layerwise_pretrain_iters=50000)
 c.cluster(X, y=Y)

@@ -23,6 +23,8 @@ else:
     import pickle
 import numpy as np
 
+import IPython
+
 class ClusteringLayer(Layer):
     '''
     Clustering layer which converts latent space Z of input layer
@@ -221,8 +223,12 @@ class DeepEmbeddingClustering(object):
         # initialize cluster centres using k-means
         print('Initializing cluster centres with k-means.')
         if self.cluster_centres is None:
+            #IPython.embed()
+            m=len(X)
+            X_tmp = X[np.random.choice(range(m), 10000),:]
             kmeans = KMeans(n_clusters=self.n_clusters, n_init=20)
-            self.y_pred = kmeans.fit_predict(self.encoder.predict(X))
+            kmeans.fit(self.encoder.predict(X_tmp))
+            self.y_pred = kmeans.predict(self.encoder.predict(X))
             self.cluster_centres = kmeans.cluster_centers_
 
         # prepare DEC model
@@ -248,18 +254,19 @@ class DeepEmbeddingClustering(object):
 
     def cluster(self, X, y=None,
                 tol=0.01, update_interval=None,
-                iter_max=1e6,
+                iter_max=1e7,
                 save_interval=None,
                 **kwargs):
 
         if update_interval is None:
             # 1 epochs
-            update_interval = X.shape[0]/self.batch_size
+            update_interval = int(X.shape[0]/self.batch_size)
         print('Update interval', update_interval)
 
         if save_interval is None:
             # 50 epochs
-            save_interval = X.shape[0]/self.batch_size*50
+            #save_interval = int(X.shape[0]/self.batch_size*50)
+            save_interval = update_interval*10
         print('Save interval', save_interval)
 
         assert save_interval >= update_interval
@@ -282,7 +289,8 @@ class DeepEmbeddingClustering(object):
                 self.p = self.p_mat(self.q)
 
                 y_pred = self.q.argmax(1)
-                delta_label = ((y_pred == self.y_pred).sum().astype(np.float32) / y_pred.shape[0])
+                #IPython.embed()
+                delta_label = ((y_pred != self.y_pred).sum().astype(np.float32) / y_pred.shape[0])
                 if y is not None:
                     acc = self.cluster_acc(y, y_pred)[0]
                     self.accuracy.append(acc)
@@ -316,7 +324,10 @@ class DeepEmbeddingClustering(object):
             # save intermediate
             if iteration % save_interval == 0:
                 z = self.encoder.predict(X)
-                pca = PCA(n_components=2).fit(z)
+                m=len(z)
+                z_tmp = z[np.random.choice(range(m), 10000),:]
+                #IPython.embed()
+                pca = PCA(n_components=2).fit(z_tmp)
                 z_2d = pca.transform(z)
                 clust_2d = pca.transform(self.cluster_centres)
                 # save states for visualization
