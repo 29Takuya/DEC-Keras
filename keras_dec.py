@@ -116,7 +116,7 @@ class DeepEmbeddingClustering(object):
 
         # greedy layer-wise training before end-to-end training:
 
-        self.encoders_dims = [self.input_dim, 500, 500, 2000, 10]
+        self.encoders_dims = [self.input_dim, 500, 500, 2000, 100]
 
         self.input_layer = Input(shape=(self.input_dim,), name='input')
         dropout_fraction = 0.2
@@ -162,7 +162,7 @@ class DeepEmbeddingClustering(object):
 
         if cluster_centres is not None:
             assert cluster_centres.shape[0] == self.n_clusters
-            assert cluster_centres.shape[1] == self.encoder.layers[-1].output_dim
+            assert cluster_centres.shape[1] == self.encoder.layers[-1].output_shape[1]
 
         if self.pretrained_weights is not None:
             self.autoencoder.load_weights(self.pretrained_weights)
@@ -241,6 +241,7 @@ class DeepEmbeddingClustering(object):
                                                 weights=self.cluster_centres,
                                                 name='clustering')])
         self.DEC.compile(loss='kullback_leibler_divergence', optimizer='adadelta')
+        IPython.embed()
         return
 
     def cluster_acc(self, y_true, y_pred):
@@ -254,7 +255,7 @@ class DeepEmbeddingClustering(object):
 
     def cluster(self, X, y=None,
                 tol=0.01, update_interval=None,
-                iter_max=1e7,
+                iter_max=1e6,
                 save_interval=None,
                 **kwargs):
 
@@ -290,7 +291,7 @@ class DeepEmbeddingClustering(object):
 
                 y_pred = self.q.argmax(1)
                 #IPython.embed()
-                delta_label = ((y_pred != self.y_pred).sum().astype(np.float32) / y_pred.shape[0])
+                delta_label = ((y_pred == self.y_pred).sum().astype(np.float32) / y_pred.shape[0])
                 if y is not None:
                     acc = self.cluster_acc(y, y_pred)[0]
                     self.accuracy.append(acc)
@@ -335,6 +336,14 @@ class DeepEmbeddingClustering(object):
                             open('c'+str(iteration)+'.pkl', 'wb'))
                 # save DEC model checkpoints
                 self.DEC.save('DEC_model_'+str(iteration)+'.h5')
+
+                # serialize model to JSON
+                model_json = self.DEC.to_json()
+                with open("model.json", "w") as json_file:
+                    json_file.write(model_json)
+                # serialize weights to HDF5
+                self.DEC.save_weights("model_weights.h5")
+                print("Saved model to disk")
 
             iteration += 1
             sys.stdout.flush()

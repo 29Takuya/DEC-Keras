@@ -1,7 +1,7 @@
 from keras_dec import DeepEmbeddingClustering
 from keras.datasets import mnist
 import numpy as np
-
+import IPython
 
 def get_mnist():
     np.random.seed(1234) # set seed for deterministic ordering
@@ -21,6 +21,8 @@ X = np.load('/home-nfs/shimada/work/english_mfcc.npz')
 X = X['arr_0']
 Y = None
 
-c = DeepEmbeddingClustering(n_clusters=100, input_dim=39)
-c.initialize(X, finetune_iters=100000, layerwise_pretrain_iters=50000)
+init_centres = np.loadtxt('cluster_centres.csv', delimiter=',')
+#c = DeepEmbeddingClustering(n_clusters=100, input_dim=39,cluster_centres=init_centres,pretrained_weights='autoencoder.h5')
+c = DeepEmbeddingClustering(n_clusters=100, input_dim=39,cluster_centres=None ,pretrained_weights=None)
+c.initialize(X, save_autoencoder=True, finetune_iters=100000, layerwise_pretrain_iters=50000)
 c.cluster(X, y=Y)
