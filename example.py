@@ -23,6 +23,6 @@ Y = None
 
 init_centres = np.loadtxt('cluster_centres.csv', delimiter=',')
 #c = DeepEmbeddingClustering(n_clusters=100, input_dim=39,cluster_centres=init_centres,pretrained_weights='autoencoder.h5')
-c = DeepEmbeddingClustering(n_clusters=100, input_dim=39,cluster_centres=None ,pretrained_weights=None)
-c.initialize(X, save_autoencoder=True, finetune_iters=100000, layerwise_pretrain_iters=50000)
+c = DeepEmbeddingClustering(n_clusters=100, input_dim=39,cluster_centres=None ,pretrained_weights='autoencoder.h5')
+c.initialize(X, save_autoencoder=False, finetune_iters=100000, layerwise_pretrain_iters=50000)
 c.cluster(X, y=Y)

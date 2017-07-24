@@ -62,6 +62,9 @@ class ClusteringLayer(Layer):
         input_dim = input_shape[1]
         self.input_spec = [InputSpec(dtype=K.floatx(),
                                      shape=(None, input_dim))]
+        #for loading model
+        #if self.initial_weights == None:
+        #    self.initial_weights = np.loadtxt('cluster_centres.csv',delimiter=',')
 
         self.W = K.variable(self.initial_weights)
         self.trainable_weights = [self.W]
@@ -231,6 +234,7 @@ class DeepEmbeddingClustering(object):
             self.y_pred = kmeans.predict(self.encoder.predict(X))
             self.cluster_centres = kmeans.cluster_centers_
 
+        #IPython.embed()
         # prepare DEC model
         #self.DEC = Model(inputs=self.input_layer,
         #                 outputs=ClusteringLayer(self.n_clusters,
@@ -241,7 +245,7 @@ class DeepEmbeddingClustering(object):
                                                 weights=self.cluster_centres,
                                                 name='clustering')])
         self.DEC.compile(loss='kullback_leibler_divergence', optimizer='adadelta')
-        IPython.embed()
+        #IPython.embed()
         return
 
     def cluster_acc(self, y_true, y_pred):
@@ -337,13 +341,8 @@ class DeepEmbeddingClustering(object):
                 # save DEC model checkpoints
                 self.DEC.save('DEC_model_'+str(iteration)+'.h5')
 
-                # serialize model to JSON
-                model_json = self.DEC.to_json()
-                with open("model.json", "w") as json_file:
-                    json_file.write(model_json)
-                # serialize weights to HDF5
-                self.DEC.save_weights("model_weights.h5")
-                print("Saved model to disk")
+                #save cluster centers
+                np.savetxt('centers_'+str(iteration)+'.csv',delimiter=',')
 
             iteration += 1
             sys.stdout.flush()
